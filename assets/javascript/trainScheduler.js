@@ -1,9 +1,8 @@
 $(document).ready(function()
 {
 
-
  // Initialize Firebase
- console.log("test");
+ 
  var config = {
     apiKey: "AIzaSyDzdHbUwtKECdPSfp-Ioa6WyQbixnfRv0M",
     authDomain: "train-scheduler-e7e2e.firebaseapp.com",
@@ -15,102 +14,97 @@ $(document).ready(function()
   firebase.initializeApp(config);
   
  let db = firebase.database();
- let tMinutesTillTrain, nextTrain, firstTrainTimeVal, frequencyVal;
-//  console.log("b4 click");
-//  let val = $(".submit").attr("id");
-//  let val2 = $(".submit").attr("class");
-//  let val3 = $("button").val();
-//  console.log(val);
-//  console.log(val2);
-//  console.log(val3);
-//event listener for submit button
+ let tMinutesTillTrain, nextTrain, firstTrainTimeVal, frequencyVal, val;
+
+ //Calling currentTime function for showing current time in header
+ currentTime();
+
+ //Reloading the page every 1 min inorder to display the correct current train schedule every minute 
+ setInterval(function() {
+    window.location.reload();
+  }, 60000);
+
+ //event listener for submit button
  $("#sumbit-button").on('click', function (event) {
-     console.log("inside click");
-    event.preventDefault()
- 
-    let trainNameVal = $("#trainName").val()
-    // let role = $("#role").val()
-    let destinationVal = $("#destination").val()
-    firstTrainTimeVal = $("#firstTrainTime").val()
-    frequencyVal = $("#frequency").val()
+     event.preventDefault()
+     let trainNameVal = $("#trainName").val()
+     let destinationVal = $("#destination").val()
+     firstTrainTimeVal = $("#firstTrainTime").val()
+     frequencyVal = $("#frequency").val()
 
-    
-    // let next = parseInt(rawMonths[0])
-    // let years = parseInt(rawMonths[2])
-    // let monthsAgo = moment(months, "MM").fromNow()
-    // console.log(monthsAgo)
-    // let yearsAgo = moment(years, "YYYY").fromNow()
-    // let monthsWorked
-    // console.log(moment().month())
-    // console.log(months)
-    // if (moment().month() < months) {
-    //     monthsWorked = parseInt(monthsAgo.split(" ")[1]) + (parseInt(yearsAgo.split(" ")[0]) * 12);
-    // } else {
-    //     monthsWorked = parseInt(monthsAgo.split(" ")[0]) + (parseInt(yearsAgo.split(" ")[0]) * 12);
-    // }
-    // let totalBilled = monthsWorked * monthlyRate;
-    // console.log("inside db");
-    db.ref().push({
-        
-        "trainNamedb": trainNameVal,
-        "destinationdb": destinationVal,
-        "firstTrainTimedb": firstTrainTimeVal,
-        "frequencydb": frequencyVal,
-        // "monthlyRate": monthlyRate,
-        // "totalBilled": totalBilled
-    })
+     //Pushing Form values to db
+     db.ref().push({
+         "trainNamedb": trainNameVal,
+         "destinationdb": destinationVal,
+         "firstTrainTimedb": firstTrainTimeVal,
+         "frequencydb": frequencyVal,
+     })
+
+     //Emptying Form values on clicking Submit
+     $(".formField").val("");
+   })
  
- })
- 
- 
- 
- db.ref().on('child_added', (snapshot) => {
-    let val = snapshot.val()
-    buildRow(val.trainNamedb, val.destinationdb, val.frequencydb)
+ //Event listener for update in db
+  db.ref().on('child_added', function(snapshot) {
+    val = snapshot.val()
+    var key = snapshot.key;
+    //calling function buildRow to create new rows in table
+    buildRow(val.trainNamedb, val.destinationdb, val.frequencydb, key)
  })
 
+ //Creating new rows in table
+ function buildRow(trainNameFn, destinationFn, frequencyFn, keyFn) {
+     let row = $("<tr>")
+     let trainNameRow = $("<td>").text(trainNameFn)
+     let destinationRow = $("<td>").text(destinationFn)
+     let frequencyRow = $("<td>").text(frequencyFn)
+     calculateTime();
+     let nextArrivalRow = $("<td>").text(nextTrainCorrect)
+     let MinutesAwayRow = $("<td>").text(tMinutesTillTrain)
+     row.append(trainNameRow, destinationRow, frequencyRow,nextArrivalRow,MinutesAwayRow)
+     row.append($("<td class='text-center'><button class='arrival btn btn-danger btn-xs' data-key='" + keyFn + "'>X</button></td>"));
+     $("#table-body").append(row)
+    }
 
- function buildRow(trainNameFn, destinationFn, frequencyFn) {
-    let row = $("<tr>")
-    let trainNameRow = $("<td>").text(trainNameFn)
-    let destinationRow = $("<td>").text(destinationFn)
-    let frequencyRow = $("<td>").text(frequencyFn)
-    calculateTime();
-    let nextArrivalRow = $("<td>").text(nextTrainCorrect)
-    let MinutesAwayRow = $("<td>").text(tMinutesTillTrain)
+ function calculateTime()
+ {
+     // First Time (pushed back 1 year to make sure it comes before current time)
+     let firstTimeConverted = moment(val.firstTrainTimedb, "HH:mm").subtract(1, "years");
+     console.log(firstTimeConverted);
 
-    // let emWorked = $("<td>").text(worked)
-    // let emRate = $("<td>").text(rate)
-    // let emBilled = $("<td>").text(billed)
-    row.append(trainNameRow, destinationRow, frequencyRow,nextArrivalRow,MinutesAwayRow)
-    $("#table-body").append(row)
- }
+     // Current Time
+     let currentTime = moment();
+     console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
 
-function calculateTime()
-{
-    // First Time (pushed back 1 year to make sure it comes before current time)
-    let firstTimeConverted = moment(firstTrainTimeVal, "HH:mm").subtract(1, "years");
-    console.log(firstTimeConverted);
+     // Difference between the times
+     let diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+     console.log("DIFFERENCE IN TIME: " + diffTime);
 
-    // Current Time
-    let currentTime = moment();
-    console.log("CURRENT TIME: " + moment(currentTime).format("hh:mm"));
+     // Time apart (remainder)
+     let tRemainder = diffTime % val.frequencydb;
+     console.log(tRemainder);
 
-    // Difference between the times
-    let diffTime = moment().diff(moment(firstTimeConverted), "minutes");
-    console.log("DIFFERENCE IN TIME: " + diffTime);
+     // Minute Until Train
+     tMinutesTillTrain = val.frequencydb - tRemainder;
+     console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
 
-    // Time apart (remainder)
-    let tRemainder = diffTime % frequencyVal;
-    console.log(tRemainder);
+     // Next Train
+     nextTrain = moment().add(tMinutesTillTrain, "minutes");
+     nextTrainCorrect = moment(nextTrain).format("LT")
+     console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
+    }
 
-    // Minute Until Train
-    tMinutesTillTrain = frequencyVal - tRemainder;
-    console.log("MINUTES TILL TRAIN: " + tMinutesTillTrain);
+ //Function for showing current time - using setTimeout
+ function currentTime() {
+     var current = moment().format('LT');
+     $("#currentTime").html(current);
+     setTimeout(currentTime, 1000);
+   };
 
-    // Next Train
-    nextTrain = moment().add(tMinutesTillTrain, "minutes");
-    nextTrainCorrect = moment(nextTrain).format("hh:mm");
-    console.log("ARRIVAL TIME: " + moment(nextTrain).format("hh:mm"));
-}
+ //Function for removing the row
+ $(document).on("click", ".arrival", function() {
+     keyref = $(this).attr("data-key");
+     db.ref().child(keyref).remove();
+     window.location.reload();
+  });
 });
