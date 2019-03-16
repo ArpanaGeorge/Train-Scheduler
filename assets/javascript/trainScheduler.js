@@ -19,7 +19,7 @@ $(document).ready(function()
  //Calling currentTime function for showing current time in header
  currentTime();
 
- //Reloading the page every 1 min inorder to display the correct current train schedule every minute 
+ //Reloading the page every 1 min inorder to display the correct current train schedule update every minute 
  setInterval(function() {
     window.location.reload();
   }, 60000);
