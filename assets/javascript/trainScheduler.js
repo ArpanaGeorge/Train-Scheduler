@@ -60,7 +60,7 @@ $(document).ready(function()
          "frequencydb": frequencyVal,
      })
 
-    //  sessionStorage.clear();
+     sessionStorage.clear();
 
      //Emptying Form values on clicking Submit
      $(".formField").val("");
