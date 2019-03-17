@@ -15,7 +15,7 @@ $(document).ready(function()
   
  let db = firebase.database();
  let tMinutesTillTrain, nextTrain, firstTrainTimeVal, frequencyVal, val;
-
+ 
  //Calling currentTime function for showing current time in header
  currentTime();
 
@@ -23,6 +23,26 @@ $(document).ready(function()
  setInterval(function() {
     window.location.reload();
   }, 60000);
+
+  //Retaining the values entered in textboxes during page reload by saving values to sessionStorage and getting values from sessionStorage to textboxes
+  $(".formField").on("keyup", function() {
+    var traintemp = $("#trainName").val().trim();
+    var citytemp = $("#destination").val().trim();
+    var timetemp = $("#firstTrainTime").val().trim();
+    var freqtemp = $("#frequency").val().trim();
+  
+    sessionStorage.setItem("train", traintemp);
+    sessionStorage.setItem("city", citytemp);
+    sessionStorage.setItem("time", timetemp);
+    sessionStorage.setItem("freq", freqtemp);
+  });
+  
+  $("#trainName").val(sessionStorage.getItem("train"));
+  $("#destination").val(sessionStorage.getItem("city"));
+  $("#firstTrainTime").val(sessionStorage.getItem("time"));
+  $("#frequency").val(sessionStorage.getItem("freq"));
+
+
 
  //event listener for submit button
  $("#sumbit-button").on('click', function (event) {
@@ -39,6 +59,8 @@ $(document).ready(function()
          "firstTrainTimedb": firstTrainTimeVal,
          "frequencydb": frequencyVal,
      })
+
+    //  sessionStorage.clear();
 
      //Emptying Form values on clicking Submit
      $(".formField").val("");
