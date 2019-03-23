@@ -1,4 +1,4 @@
-# Link to deployed project - https://arpanageorge.github.io/Train-Scheduler/
+## Link to deployed project - https://arpanageorge.github.io/Train-Scheduler/
 
 # Train-Scheduler
 
